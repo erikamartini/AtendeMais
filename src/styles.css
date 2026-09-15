@@ -1552,6 +1552,55 @@ h1, h2 { font-family: Manrope, sans-serif; letter-spacing: -1.4px; }
   .search-box input { font-size: 14px; }
 }
 
+/* Additional mobile fixes: prevent horizontal scroll, compact header CTA and stack ticket rows */
+@media (max-width: 600px) {
+  html, body { overflow-x: hidden; }
+
+  /* Header: allow wrapping and smaller CTA */
+  .topbar-inner { flex-wrap: wrap; align-items: center; height: auto; padding-top: 10px; padding-bottom: 10px; }
+  .brand { flex: 1 1 auto; font-size: 16px; }
+  .mobile-menu-button { display: grid; }
+  .header-actions { order: 3; }
+  .outline-button, .logout-button { padding: 8px 10px; font-size: 13px; }
+  .outline-button.light { padding: 8px 10px; }
+
+  /* Hero actions full width */
+  .landing-actions { flex-direction: column; align-items: stretch; }
+  .landing-actions .outline-button, .landing-actions .primary-button { width: 100%; }
+
+  /* Ticket rows: stack content, remove horizontal grid overflow */
+  .ticket-row {
+    display: block;
+    padding: 14px 12px;
+    border-radius: 12px;
+    overflow: visible;
+    position: relative;
+  }
+
+  .ticket-main-button {
+    display: block;
+    text-align: left;
+    width: 100%;
+    padding: 0;
+    background: transparent;
+  }
+
+  .ticket-main { display: block; margin-bottom: 10px; }
+  .ticket-date { display: block; margin-top: 6px; color: var(--muted); font-size: 13px; }
+
+  .status-badge { display: inline-block; margin-top: 6px; }
+
+  .delete-ticket-button {
+    position: absolute;
+    right: 10px;
+    top: 12px;
+    transform: none;
+  }
+
+  /* Ensure hero visual doesn't overflow */
+  .hero-visual { max-width: 100%; right: 0; left: auto; }
+}
+
 @media (max-width: 800px) {
   .topbar-inner { height: 62px; padding: 0 18px; gap: 15px; }
   .mobile-menu-button { display: grid; margin-left: auto; }
