@@ -63,7 +63,7 @@ const navItems = [
   { id: 'home', label: 'Início', icon: Headphones, roles: ['cliente', 'atendente'] },
   { id: 'ticket', label: 'Abrir chamado', icon: Plus, roles: ['cliente'] },
   { id: 'dashboard', label: 'Dashboard', icon: FileText, roles: ['cliente', 'atendente'] },
-  { id: 'knowledge', label: 'Base de conhecimento', icon: BookOpen, roles: ['cliente', 'atendente'] },
+  { id: 'knowledge', label: 'Base de conhecimento', icon: BookOpen, roles: ['cliente'] },
   { id: 'queue', label: 'Fila de chamados', icon: Layers3, roles: ['atendente'] },
   { id: 'clients', label: 'Clientes', icon: Users, roles: ['atendente'] }
 ];
@@ -93,8 +93,16 @@ function App() {
 
   const currentUser = session || demoProfiles[0];
   const visibleNav = navItems.filter((item) => item.roles.includes(currentUser.role));
+  const allowedPages = visibleNav.map((item) => item.id);
+  const safePage = allowedPages.includes(page) ? page : 'home';
 
   const navigate = (nextPage) => {
+    if (!allowedPages.includes(nextPage)) {
+      setPage('home');
+      setMobileMenu(false);
+      return;
+    }
+
     setPage(nextPage);
     setMobileMenu(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -162,16 +170,16 @@ function App() {
       </header>
 
       <main>
-        {page === 'home' && <HomePage navigate={navigate} notify={notify} role={currentUser.role} />}
-        {page === 'ticket' && <TicketPage onCreate={createTicket} navigate={navigate} />}
-        {page === 'ombudsman' && <OmbudsmanPage notify={notify} navigate={navigate} />}
-        {page === 'dashboard' && <DashboardPage tickets={tickets} currentUser={currentUser} setSelectedTicket={setSelectedTicket} navigate={navigate} onDeleteTicket={deleteTicket} />}
-        {page === 'queue' && <QueuePage tickets={tickets} currentUser={currentUser} setSelectedTicket={setSelectedTicket} />}
-        {page === 'clients' && <ClientsPage tickets={tickets} currentUser={currentUser} />}
-        {page === 'knowledge' && <KnowledgePage role={currentUser.role} />}
+        {safePage === 'home' && <HomePage navigate={navigate} notify={notify} role={currentUser.role} />}
+        {safePage === 'ticket' && <TicketPage onCreate={createTicket} navigate={navigate} />}
+        {safePage === 'ombudsman' && <OmbudsmanPage notify={notify} navigate={navigate} />}
+        {safePage === 'dashboard' && <DashboardPage tickets={tickets} currentUser={currentUser} setSelectedTicket={setSelectedTicket} navigate={navigate} onDeleteTicket={deleteTicket} />}
+        {safePage === 'queue' && <QueuePage tickets={tickets} currentUser={currentUser} setSelectedTicket={setSelectedTicket} />}
+        {safePage === 'clients' && <ClientsPage tickets={tickets} currentUser={currentUser} />}
+        {safePage === 'knowledge' && <KnowledgePage role={currentUser.role} />}
       </main>
 
-      {selectedTicket && <TicketModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} notify={notify} />}
+      {selectedTicket && <TicketModal ticket={selectedTicket} currentUser={currentUser} onClose={() => setSelectedTicket(null)} notify={notify} />}
 
       {toast && (
         <div className={`toast ${toast.type}`} role="status">
@@ -417,34 +425,42 @@ function HomePage({ navigate, notify, role }) {
   const [openFaq, setOpenFaq] = useState(0);
   const [search, setSearch] = useState('');
   const [contactOpen, setContactOpen] = useState(false);
+  const isAtendente = role === 'atendente';
 
-  const quickActions = role === 'atendente'
+  const quickActions = isAtendente
     ? [
         { title: 'Fila de chamados', description: 'Veja chamados pendentes, em atendimento e prioritários.', action: 'Ver fila', icon: Layers3, tone: 'blue', onClick: () => navigate('queue'), keywords: 'fila chamados pendentes prioridade atendimento' },
         { title: 'Clientes', description: 'Busque o cliente e acompanhe o histórico de solicitações.', action: 'Consultar clientes', icon: Users, tone: 'green', onClick: () => navigate('clients'), keywords: 'clientes histórico solicitações atendimento' },
-        { title: 'Base de conhecimento', description: 'Consulte materiais de apoio para responder com rapidez.', action: 'Abrir base', icon: BookOpen, tone: 'violet', onClick: () => navigate('knowledge'), keywords: 'faq artigo base conhecimento procedimento' },
-        { title: 'Ouvidoria', description: 'Acompanhe manifestações sigilosas e reclamações recebidas.', action: 'Ver ouvidoria', icon: ShieldCheck, tone: 'amber', onClick: () => navigate('ombudsman'), keywords: 'reclamação ouvidoria sigilo manifestação' }
+        { title: 'Base de conhecimento', description: 'Consulte materiais de apoio para responder com rapidez.', action: 'Abrir base', icon: BookOpen, tone: 'violet', onClick: () => navigate('knowledge'), keywords: 'faq artigo base conhecimento procedimento' }
       ]
     : [
         { title: 'Abrir chamado', description: 'Relate um problema técnico ou solicite suporte especializado.', action: 'Criar chamado', icon: Ticket, tone: 'green', onClick: () => navigate('ticket'), keywords: 'ticket suporte técnico problema erro login acesso ajuda chamado' },
         { title: 'Meus chamados', description: 'Acompanhe o status de cada solicitação do seu cliente.', action: 'Ver meus chamados', icon: FileText, tone: 'blue', onClick: () => navigate('dashboard'), keywords: 'meus chamados status histórico atualizações' },
-        { title: 'Ajuda e FAQ', description: 'Consulte respostas rápidas e orientações para dúvidas comuns.', action: 'Abrir ajuda', icon: CircleHelp, tone: 'violet', onClick: () => setContactOpen(true), keywords: 'faq ajuda dúvidas orientações' },
-        { title: 'Central de reclamações', description: 'Registre uma reclamação ou denúncia com sigilo.', action: 'Ir para ouvidoria', icon: ShieldCheck, tone: 'amber', onClick: () => navigate('ombudsman'), keywords: 'reclamação ouvidoria manifestação insatisfação problema sigilo denúncia' }
+        { title: 'Ajuda e FAQ', description: 'Consulte respostas rápidas e orientações para dúvidas comuns.', action: 'Abrir ajuda', icon: CircleHelp, tone: 'violet', onClick: () => setContactOpen(true), keywords: 'faq ajuda dúvidas orientações' }
       ];
 
   const moduleRoles = {
-    cliente: ['Portal do cliente', 'Central de ouvidoria', 'Base de conhecimento'],
-    atendente: ['Área do atendente', 'Base de conhecimento', 'Central de ouvidoria']
+    cliente: ['Portal do cliente', 'Base de conhecimento'],
+    atendente: ['Área do atendente', 'Base de conhecimento']
   };
+
+  const atendenteFaq = [
+    ['Como priorizo os chamados?', 'Revise urgência, impacto do cliente e prazo de resposta. Prioridades altas devem ser tratadas primeiro para evitar atrasos e mitigar riscos.'],
+    ['Como vejo o histórico de um cliente?', 'Entre na visão do cliente no painel de atendimento e consulte o histórico, mensagens e status das solicitações anteriores.'],
+    ['Qual a melhor forma de responder?', 'Use linguagem clara, confirme a causa, informe o que foi feito e diga o próximo passo para o cliente acompanhar o atendimento.'],
+    ['Como registrar uma atualização?', 'Atualize o status do chamado, anote a ação realizada e responda o cliente com objetivo, clareza e prazo estimado.']
+  ];
 
   const normalizedSearch = search.trim().toLowerCase();
   const filteredQuickActions = normalizedSearch
     ? quickActions.filter((item) => `${item.title} ${item.description} ${item.keywords}`.toLowerCase().includes(normalizedSearch))
     : quickActions;
 
+  const baseFaq = isAtendente ? atendenteFaq : faqItems;
+
   const filteredFaq = normalizedSearch
-    ? faqItems.filter(([question, answer]) => `${question} ${answer}`.toLowerCase().includes(normalizedSearch))
-    : faqItems;
+    ? baseFaq.filter(([question, answer]) => `${question} ${answer}`.toLowerCase().includes(normalizedSearch))
+    : baseFaq;
 
   const handleSearchSubmit = (event) => {
     event.preventDefault();
@@ -456,9 +472,9 @@ function HomePage({ navigate, notify, role }) {
       return;
     }
 
-    const faqMatch = faqItems.find(([question, answer]) => `${question} ${answer}`.toLowerCase().includes(normalizedSearch));
+    const faqMatch = baseFaq.find(([question, answer]) => `${question} ${answer}`.toLowerCase().includes(normalizedSearch));
     if (faqMatch) {
-      const index = faqItems.findIndex(([itemQuestion]) => itemQuestion === faqMatch[0]);
+      const index = baseFaq.findIndex(([itemQuestion]) => itemQuestion === faqMatch[0]);
       setOpenFaq(index);
     }
   };
@@ -470,24 +486,45 @@ function HomePage({ navigate, notify, role }) {
           <div className="hero-copy">
             <span className="eyebrow light">CENTRAL DE ATENDIMENTO</span>
             <h1>
-              Como podemos<br />
-              <em>ajudar você</em> hoje?
+              {isAtendente ? (
+                <>
+                  O que vamos<br />
+                  <em>resolver hoje?</em>
+                </>
+              ) : (
+                <>
+                  Como podemos<br />
+                  <em>ajudar você</em> hoje?
+                </>
+              )}
             </h1>
             <p>
-              Acompanhe solicitações, receba suporte técnico, registre reclamações e tenha uma experiência mais clara e organizada.
+              {isAtendente
+                ? 'Acompanhe a fila, priorize demandas, responda com agilidade e mantenha o cliente informado em cada etapa.'
+                : 'Acompanhe solicitações, receba suporte técnico, registre reclamações e tenha uma experiência mais clara e organizada.'}
             </p>
 
             <form className="search-box" onSubmit={handleSearchSubmit}>
               <Search size={20} />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Busque por uma dúvida ou assunto..." aria-label="Buscar na central de ajuda" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={isAtendente ? 'Busque por chamado, cliente ou prioridade...' : 'Busque por uma dúvida ou assunto...'} aria-label="Buscar na central de ajuda" />
               <button type="submit" className="search-submit" aria-label="Buscar">Buscar</button>
             </form>
 
             <div className="popular-searches">
               <span>Mais buscados:</span>
-              <button onClick={() => setSearch('segundavia')}>segunda via</button>
-              <button onClick={() => setSearch('prazo')}>prazo</button>
-              <button onClick={() => setSearch('acesso')}>acesso</button>
+              {isAtendente ? (
+                <>
+                  <button onClick={() => setSearch('prioridade')}>prioridade</button>
+                  <button onClick={() => setSearch('prazo')}>prazo</button>
+                  <button onClick={() => setSearch('cliente')}>cliente</button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setSearch('segundavia')}>segunda via</button>
+                  <button onClick={() => setSearch('prazo')}>prazo</button>
+                  <button onClick={() => setSearch('acesso')}>acesso</button>
+                </>
+              )}
             </div>
           </div>
 
@@ -584,30 +621,59 @@ function HomePage({ navigate, notify, role }) {
         </section>
       )}
 
-      <section className="content-section faq-section">
-        <div className="faq-layout">
-          <div className="faq-aside">
-            <span className="eyebrow">AINDA COM DÚVIDAS?</span>
-            <h2>Respostas para as perguntas mais comuns.</h2>
-            <p>Se não encontrar o que precisa, nosso time está a um clique de distância.</p>
-            <button className="text-button" onClick={() => setContactOpen(true)}>
-              Falar com atendimento <ArrowRight size={16} />
-            </button>
-          </div>
+      {!isAtendente && (
+        <section className="content-section faq-section">
+          <div className="faq-layout">
+            <div className="faq-aside">
+              <span className="eyebrow">AINDA COM DÚVIDAS?</span>
+              <h2>Respostas para as perguntas mais comuns.</h2>
+              <p>Se não encontrar o que precisa, nosso time está a um clique de distância.</p>
+              <button className="text-button" onClick={() => setContactOpen(true)}>
+                Falar com atendimento <ArrowRight size={16} />
+              </button>
+            </div>
 
-          <div className="faq-list">
-            {filteredFaq.map(([question, answer], index) => (
-              <div className={`faq-item ${openFaq === index ? 'open' : ''}`} key={question}>
-                <button onClick={() => setOpenFaq(openFaq === index ? -1 : index)} aria-expanded={openFaq === index}>
-                  <span>{question}</span>
-                  <ChevronDown size={18} />
-                </button>
-                {openFaq === index && <p>{answer}</p>}
-              </div>
-            ))}
+            <div className="faq-list">
+              {filteredFaq.map(([question, answer], index) => (
+                <div className={`faq-item ${openFaq === index ? 'open' : ''}`} key={question}>
+                  <button onClick={() => setOpenFaq(openFaq === index ? -1 : index)} aria-expanded={openFaq === index}>
+                    <span>{question}</span>
+                    <ChevronDown size={18} />
+                  </button>
+                  {openFaq === index && <p>{answer}</p>}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {isAtendente && (
+        <section className="content-section faq-section">
+          <div className="faq-layout">
+            <div className="faq-aside">
+              <span className="eyebrow">SUPORTE OPERACIONAL</span>
+              <h2>Atendimento e procedimentos internos.</h2>
+              <p>Consulte os materiais mais usados para orientar respostas e manter a fila organizada.</p>
+              <button className="text-button" onClick={() => navigate('queue')}>
+                Ver fila de chamados <ArrowRight size={16} />
+              </button>
+            </div>
+
+            <div className="faq-list">
+              {filteredFaq.map(([question, answer], index) => (
+                <div className={`faq-item ${openFaq === index ? 'open' : ''}`} key={question}>
+                  <button onClick={() => setOpenFaq(openFaq === index ? -1 : index)} aria-expanded={openFaq === index}>
+                    <span>{question}</span>
+                    <ChevronDown size={18} />
+                  </button>
+                  {openFaq === index && <p>{answer}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {contactOpen && <ContactModal onClose={() => setContactOpen(false)} notify={notify} />}
     </>
@@ -875,7 +941,7 @@ function DashboardPage({ tickets, currentUser, setSelectedTicket, navigate, onDe
           </p>
         </div>
         {isClient ? (
-          <button className="outline-button" onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-ticket'))}><ArrowRight size={15} /> Abrir chamado</button>
+          <button className="outline-button" onClick={() => navigate('ticket')}><ArrowRight size={15} /> Abrir chamado</button>
         ) : (
           <button className="outline-button"><ArrowRight size={15} /> Exportar fila</button>
         )}
@@ -1147,17 +1213,31 @@ function KnowledgePage({ role }) {
   );
 }
 
-function TicketModal({ ticket, onClose, notify }) {
+function TicketModal({ ticket, onClose, notify, currentUser }) {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState(ticket.messages);
+  const isClientSession = currentUser.role === 'cliente';
+  const outgoingFrom = isClientSession ? 'client' : 'agent';
+
+  const getSenderInfo = (item) => {
+    if (item.from === 'agent') {
+      return isClientSession
+        ? { label: 'Atende+ · Ana', avatar: 'AT' }
+        : { label: 'Você', avatar: 'AT' };
+    }
+
+    return isClientSession
+      ? { label: 'Você', avatar: 'MC' }
+      : { label: 'Cliente', avatar: 'MC' };
+  };
 
   const send = (event) => {
     event.preventDefault();
     if (!message.trim()) return;
 
-    setMessages((current) => [...current, { from: 'client', text: message, time: 'Agora' }]);
+    setMessages((current) => [...current, { from: outgoingFrom, text: message, time: 'Agora' }]);
     setMessage('');
-    notify('Resposta enviada ao atendente.');
+    notify(isClientSession ? 'Resposta enviada ao atendente.' : 'Resposta enviada ao cliente.');
   };
 
   return (
@@ -1176,18 +1256,22 @@ function TicketModal({ ticket, onClose, notify }) {
         </div>
 
         <div className="conversation">
-          {messages.map((item, index) => (
-            <div className={`message ${item.from}`} key={`${item.time}-${index}`}>
-              <span className="message-avatar">{item.from === 'agent' ? 'AT' : 'MC'}</span>
-              <div>
-                <div className="message-meta">
-                  <strong>{item.from === 'agent' ? 'Atende+ · Ana' : 'Você'}</strong>
-                  <span>{item.time}</span>
+          {messages.map((item, index) => {
+            const sender = getSenderInfo(item);
+
+            return (
+              <div className={`message ${item.from}`} key={`${item.time}-${index}`}>
+                <span className="message-avatar">{sender.avatar}</span>
+                <div>
+                  <div className="message-meta">
+                    <strong>{sender.label}</strong>
+                    <span>{item.time}</span>
+                  </div>
+                  <p>{item.text}</p>
                 </div>
-                <p>{item.text}</p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <form className="reply-box" onSubmit={send}>

@@ -1521,8 +1521,22 @@ h1, h2 { font-family: Manrope, sans-serif; letter-spacing: -1.4px; }
   .brand { font-size: 18px; }
   .mobile-menu-button { display: grid; }
   .main-nav { display: none; }
-  .main-nav.is-open { display: flex; position: absolute; top: 64px; left: 0; right: 0; background: rgba(6,12,18,0.95); flex-direction: column; gap: 6px; padding: 12px; border-bottom: 1px solid var(--line); }
-  .main-nav.is-open button { width: 100%; justify-content: flex-start; padding: 10px 14px; }
+  .main-nav.is-open {
+    display: flex;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: rgba(8, 17, 25, 0.98);
+    backdrop-filter: blur(14px);
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 12px 14px;
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 18px 30px rgba(2, 6, 10, 0.35);
+  }
+  .main-nav.is-open button { width: 100%; justify-content: flex-start; padding: 10px 14px; border-radius: 10px; }
 
   .landing-hero-inner, .landing-login-shell, .login-page, .home-hero .hero-content { grid-template-columns: 1fr; padding: 36px 18px; }
   .hero-visual { width: 100%; position: static; min-height: 160px; margin-top: 18px; }
@@ -1600,11 +1614,13 @@ h1, h2 { font-family: Manrope, sans-serif; letter-spacing: -1.4px; }
   }
 
   .landing-copy h1 {
+    font-size: clamp(30px, 9vw, 44px);
     max-width: 100%;
   }
 
   .landing-copy p {
-    max-width: 290px;
+    max-width: 320px;
+    font-size: 15px;
     margin-left: 0;
     margin-right: 0;
     line-height: 1.55;
@@ -1703,10 +1719,10 @@ h1, h2 { font-family: Manrope, sans-serif; letter-spacing: -1.4px; }
 }
 
 @media (max-width: 600px) {
-  .topbar-inner { padding: 0 12px; height: 58px; }
+  .topbar-inner { padding: 0 12px; height: auto; min-height: 58px; }
   .brand { font-size: 16px; }
   .header-actions .user-name { display: none; }
-  .hero-copy h1, .landing-copy h1 { font-size: clamp(22px, 9vw, 34px); }
+  .hero-copy h1, .landing-copy h1 { font-size: clamp(28px, 8vw, 38px); }
   .hero-copy p, .landing-copy p { font-size: 14px; }
   .landing-feature-grid { grid-template-columns: 1fr; }
   .quick-grid { grid-template-columns: 1fr; }
@@ -1715,6 +1731,7 @@ h1, h2 { font-family: Manrope, sans-serif; letter-spacing: -1.4px; }
   .landing-login-panel { padding: 28px 16px 34px; }
   .login-panel { padding: 28px 18px; }
   .search-box input { font-size: 14px; }
+  .page-intro h1, .dashboard-heading h1, .section-heading h2, .faq-aside h2 { font-size: 30px; }
 }
 
 /* Additional mobile fixes: prevent horizontal scroll, compact header CTA and stack ticket rows */
@@ -1767,21 +1784,45 @@ h1, h2 { font-family: Manrope, sans-serif; letter-spacing: -1.4px; }
 }
 
 @media (max-width: 800px) {
-  .topbar-inner { height: 62px; padding: 0 18px; gap: 15px; }
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+
+  .topbar-inner {
+    position: relative;
+    height: auto;
+    min-height: 62px;
+    padding: 12px 18px;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
   .mobile-menu-button { display: grid; margin-left: auto; }
   .main-nav {
     display: none;
-    position: absolute;
-    top: 61px;
-    left: 0;
-    right: 0;
-    padding: 10px 18px 16px;
-    background: rgba(8,17,25,0.96);
-    border-bottom: 1px solid var(--line);
+    position: static;
+    width: 100%;
+    padding: 10px 0 0;
+    background: transparent;
+    border-bottom: 0;
     flex-direction: column;
     align-items: stretch;
   }
-  .main-nav.is-open { display: flex; }
+  .main-nav.is-open {
+    display: flex;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 60;
+    background: rgba(8, 17, 25, 0.98);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 18px 32px rgba(2, 6, 10, 0.42);
+    padding: 10px;
+  }
   .main-nav button { justify-content: flex-start; }
   .user-name { display: none; }
   .hero-content { padding: 54px 22px 50px; }
